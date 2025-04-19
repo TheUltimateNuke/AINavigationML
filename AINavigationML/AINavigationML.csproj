@@ -1,0 +1,69 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+
+        <TargetFramework>net6.0</TargetFramework>
+
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <LangVersion>12</LangVersion>
+        <DefineConstants>$(DefineConstants);MELONLOADER</DefineConstants>
+        <Nullable>disable</Nullable>
+
+        <OutputType>Library</OutputType>
+
+        <!-- <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> -->
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>embedded</DebugType>
+
+        <ErrorReport>prompt</ErrorReport>
+        <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+
+        <OutputPath>bin\Debug\</OutputPath>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <DebugSymbols>false</DebugSymbols>
+        <DebugType>none</DebugType>
+
+        <ErrorReport>prompt</ErrorReport>
+        <DefineConstants>$(DefineConstants);RELEASE;TRACE</DefineConstants>
+
+        <OutputPath>bin\Release\</OutputPath>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Assets\**\*"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- MelonLoader Packages - Feel free to remove some if unused -->
+        <Reference Include="ref\**\*.dll"></Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <GameDirFile Include="$(SolutionDir)\game_dir.txt"></GameDirFile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="NavMeshComponents\" />
+    </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <!-- Read game_dir.txt into property -->
+        <ReadLinesFromFile File="@(GameDirFile)">
+            <Output TaskParameter="Lines" PropertyName="GameDir"/>
+        </ReadLinesFromFile>
+
+        <!-- Copy the built mod dll into game Mods folder -->
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDir)\UserLibs"/>
+        <Copy SourceFiles="$(TargetDir)/UnityEngine.AIModule.dll" DestinationFolder="$(GameDir)\UserLibs"/>
+    </Target>
+</Project>
