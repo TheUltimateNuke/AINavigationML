@@ -1,13 +1,14 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using UnityEngine.Bindings;
+﻿using System.Runtime.InteropServices;
 using AINavigationML;
+using MelonLoader;
 
 namespace UnityEngine.AI
 {
 	// Token: 0x0200001C RID: 28
+	[StructLayout(LayoutKind.Sequential)]
 	public struct NavMeshBuildSettings
 	{
+		
 		// Token: 0x17000065 RID: 101
 		// (get) Token: 0x0600014A RID: 330 RVA: 0x00002E94 File Offset: 0x00001094
 		// (set) Token: 0x0600014B RID: 331 RVA: 0x00002EAC File Offset: 0x000010AC

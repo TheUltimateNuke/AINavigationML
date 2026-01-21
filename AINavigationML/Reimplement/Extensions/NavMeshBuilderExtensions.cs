@@ -1,4 +1,8 @@
-﻿using AINavigationML;
+﻿using System.Runtime.InteropServices;
+using AINavigationML;
+using Il2CppInterop.Common;
+using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace UnityEngine.AI.Extensions;
 
@@ -86,26 +90,49 @@ public static class NavMeshBuilderExtensions
     }
     
     // ICalls
-    private delegate bool UpdateNavMeshDataListInternal_InjectedDelegate(NavMeshData data, ref NavMeshBuildSettings buildSettings, object sources, ref Bounds localBounds);
-    private delegate AsyncOperation UpdateNavMeshDataAsyncListInternal_InjectedDelegate(NavMeshData data, ref NavMeshBuildSettings buildSettings, object sources, ref Bounds localBounds);
-    private delegate NavMeshBuildSource[] CollectSourcesInternal_InjectedDelegate(int includedLayerMask, ref Bounds includedWorlBounds, Transform root, bool useBounds, NavMeshCollectGeometry geometry, int defaultArea, NavMeshBuildMarkup[] markups);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate bool UpdateNavMeshDataListInternal_InjectedDelegate(NavMeshData data, ref IntPtr buildSettings, object sources, ref Bounds localBounds);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate IntPtr UpdateNavMeshDataAsyncListInternal_InjectedDelegate(NavMeshData data, ref IntPtr buildSettings, object sources, ref Bounds localBounds);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate IntPtr CollectSourcesInternal_InjectedDelegate(int includedLayerMask, ref Bounds includedWorldBounds, Transform root, bool useBounds, NavMeshCollectGeometry geometry, int defaultArea, IntPtr markups);
     
-    private static bool UpdateNavMeshDataListInternal_Injected(NavMeshData data, ref NavMeshBuildSettings buildSettings,
+    private static unsafe bool UpdateNavMeshDataListInternal_Injected(NavMeshData data, ref NavMeshBuildSettings buildSettings,
         object sources, ref Bounds localBounds)
     {
-        return ICallManager.GetICall<UpdateNavMeshDataListInternal_InjectedDelegate>("UnityEngine.AI::NavMeshBuilderBindings::UpdateNavMeshDataListInternal_Injected").Invoke(data, ref buildSettings, sources, ref localBounds);
+        fixed (NavMeshBuildSettings* pBuildSettings = &buildSettings)
+        {
+            var placeholder = (IntPtr)pBuildSettings;
+            var ret = ICallManager.GetICall<UpdateNavMeshDataListInternal_InjectedDelegate>("UnityEngine.AI.NavMeshBuilder::UpdateNavMeshDataListInternal_Injected").Invoke(data, ref placeholder, sources, ref localBounds);
+            buildSettings = IL2CPP.PointerToValueGeneric<NavMeshBuildSettings>(placeholder, false, false);
+            return ret;
+        }
     }
 
-    private static AsyncOperation UpdateNavMeshDataAsyncListInternal_Injected(NavMeshData data,
+    private static unsafe AsyncOperation UpdateNavMeshDataAsyncListInternal_Injected(NavMeshData data,
         ref NavMeshBuildSettings buildSettings, object sources, ref Bounds localBounds)
     {
-        return ICallManager.GetICall<UpdateNavMeshDataAsyncListInternal_InjectedDelegate>("UnityEngine.AI::NavMeshBuilderBindings::UpdateNavMeshDataAsyncListInternal_Injected").Invoke(data, ref buildSettings, sources, ref localBounds);
+        fixed (NavMeshBuildSettings* pBuildSettings = &buildSettings)
+        {
+            var placeholder = (IntPtr)pBuildSettings;
+            var ret = new AsyncOperation(ICallManager.GetICall<UpdateNavMeshDataAsyncListInternal_InjectedDelegate>("UnityEngine.AI.NavMeshBuilder::UpdateNavMeshDataAsyncListInternal_Injected").Invoke(data, ref placeholder, sources, ref localBounds));
+            buildSettings = IL2CPP.PointerToValueGeneric<NavMeshBuildSettings>(placeholder, false, false);
+            return ret;
+        }
     }
 
-    private static NavMeshBuildSource[] CollectSourcesInternal_Injected(int includedLayerMask,
+    private static unsafe NavMeshBuildSource[] CollectSourcesInternal_Injected(int includedLayerMask,
         ref Bounds includedWorldBounds, Transform root, bool useBounds, NavMeshCollectGeometry geometry,
         int defaultArea, NavMeshBuildMarkup[] markups)
     {
-        return ICallManager.GetICall<CollectSourcesInternal_InjectedDelegate>("UnityEngine.AI.NavMeshBuilderBindings::CollectSourcesInternal_Injected").Invoke(includedLayerMask, ref includedWorldBounds, root, useBounds, geometry, defaultArea, markups);
+        fixed (NavMeshBuildMarkup* pMarkup = markups)
+        {
+            var placeholderMarkup = (IntPtr)pMarkup;
+            var ret = ICallManager
+                .GetICall<CollectSourcesInternal_InjectedDelegate>(
+                    "UnityEngine.AI.NavMeshBuilder::CollectSourcesInternal_Injected").Invoke(includedLayerMask, ref includedWorldBounds, root, useBounds, geometry, defaultArea, placeholderMarkup);
+            //includedWorldBounds = IL2CPP.PointerToValueGeneric<Bounds>(placeholderWorldBounds, false, false);
+            return IL2CPP.PointerToValueGeneric<NavMeshBuildSource[]>(ret, false, false);
+        }
     }
 }

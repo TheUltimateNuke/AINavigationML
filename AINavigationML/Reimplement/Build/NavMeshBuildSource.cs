@@ -1,11 +1,10 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using UnityEngine.Bindings;
-using UnityEngine.Scripting;
+﻿using System.Runtime.InteropServices;
 using AINavigationML;
+using MelonLoader;
 
 namespace UnityEngine.AI
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct NavMeshBuildSource
     {
         public Matrix4x4 transform
@@ -85,12 +84,12 @@ namespace UnityEngine.AI
         
         private static Component InternalGetComponent(int instanceID)
         {
-            return ICallManager.GetICall<InternalGetComponentDelegate>("UnityEngine.AI::NavMeshBuildSource::InternalGetComponent").Invoke(instanceID);
+            return ICallManager.GetICall<InternalGetComponentDelegate>("UnityEngine.AI.NavMeshBuildSource::InternalGetComponent").Invoke(instanceID);
         }
 
         private static Object InternalGetObject(int instanceID)
         {
-            return ICallManager.GetICall<InternalGetObjectDelegate>("UnityEngine.AI::NavMeshBuildSource::InternalGetObject").Invoke(instanceID);
+            return ICallManager.GetICall<InternalGetObjectDelegate>("UnityEngine.AI.NavMeshBuildSource::InternalGetObject").Invoke(instanceID);
         }
 
         private Matrix4x4 m_Transform;

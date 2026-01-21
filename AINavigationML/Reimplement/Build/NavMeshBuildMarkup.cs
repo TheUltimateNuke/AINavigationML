@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Il2CppInterop.Runtime;
 using UnityEngine.Bindings;
 using AINavigationML;
+using Il2CppInterop.Runtime.InteropTypes;
+using MelonLoader;
 
 namespace UnityEngine.AI
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct NavMeshBuildMarkup
     {
         public bool overrideArea

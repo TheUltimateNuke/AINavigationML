@@ -1,4 +1,5 @@
 ﻿using AINavigationML;
+using Il2CppInterop.Runtime;
 
 namespace UnityEngine.AI.Extensions;
 
@@ -67,10 +68,14 @@ public static class NavMeshExtensions
             "UnityEngine.AI.NavMeshBuildSettings::AddLinkInternal_Injected").Invoke(ref link, ref position, ref rotation);
     }
     
-    private delegate void GetSettingsByID_InjectedDelegate(int agentTypeID, out NavMeshBuildSettings navMeshBuildSettings);
+    private delegate void GetSettingsByID_InjectedDelegate(int agentTypeID, out IntPtr navMeshBuildSettings);
 
-    private static void GetSettingsByID_Injected(int agentTypeID, out NavMeshBuildSettings ret)
+    private static unsafe void GetSettingsByID_Injected(int agentTypeID, out NavMeshBuildSettings ret)
     {
-        ICallManager.GetICall<GetSettingsByID_InjectedDelegate>("UnityEngine.AI::NavMeshBindings::GetSettingsByIdD_Injected").Invoke(agentTypeID, out ret);
+        fixed (NavMeshBuildSettings* ptr = &ret)
+        {
+            ICallManager.GetICall<GetSettingsByID_InjectedDelegate>("UnityEngine.AI.NavMesh::GetSettingsByID_Injected").Invoke(agentTypeID, out var placeholder);
+            ret = IL2CPP.PointerToValueGeneric<NavMeshBuildSettings>(placeholder, false, false);
+        }
     }
 }
