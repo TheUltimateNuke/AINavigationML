@@ -1,7 +1,10 @@
 using System.Collections.Generic;
+using MelonLoader;
+using UnityEngine.AI.Extensions;
 
 namespace UnityEngine.AI
 {
+    [RegisterTypeInIl2Cpp]
     public class NavMeshLink : MonoBehaviour
     {
         int m_AgentTypeID;
@@ -65,7 +68,7 @@ namespace UnityEngine.AI
 #endif
 
             if (s_Tracked.Count == 0)
-                NavMesh.onPreUpdate += UpdateTrackedInstances;
+                NavMesh.onPreUpdate.CombineImpl((Il2CppSystem.Action)UpdateTrackedInstances);
 
             s_Tracked.Add(link);
         }
@@ -75,7 +78,7 @@ namespace UnityEngine.AI
             s_Tracked.Remove(link);
 
             if (s_Tracked.Count == 0)
-                NavMesh.onPreUpdate -= UpdateTrackedInstances;
+                NavMesh.onPreUpdate.RemoveImpl((Il2CppSystem.Action)UpdateTrackedInstances);
         }
 
         void SetAutoUpdate(bool value)
@@ -107,7 +110,7 @@ namespace UnityEngine.AI
             link.bidirectional = m_Bidirectional;
             link.area = m_Area;
             link.agentTypeID = m_AgentTypeID;
-            m_LinkInstance = NavMesh.AddLink(link, transform.position, transform.rotation);
+            m_LinkInstance = NavMeshExtensions.AddLink(link, transform.position, transform.rotation);
             if (m_LinkInstance.valid)
                 m_LinkInstance.owner = this;
 

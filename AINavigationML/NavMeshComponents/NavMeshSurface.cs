@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using MelonLoader;
+using UnityEngine.AI.Extensions;
 
 namespace UnityEngine.AI
 {
@@ -9,6 +11,7 @@ namespace UnityEngine.AI
         Children = 2,
     }
 
+    [RegisterTypeInIl2Cpp]
     public class NavMeshSurface : MonoBehaviour
     {
         int m_AgentTypeID;
@@ -96,7 +99,7 @@ namespace UnityEngine.AI
 
             if (m_NavMeshData != null)
             {
-                m_NavMeshDataInstance = NavMesh.AddNavMeshData(m_NavMeshData, transform.position, transform.rotation);
+                m_NavMeshDataInstance = NavMeshExtensions.AddNavMeshData(m_NavMeshData, transform.position, transform.rotation);
                 m_NavMeshDataInstance.owner = this;
             }
 
@@ -112,7 +115,7 @@ namespace UnityEngine.AI
 
         public NavMeshBuildSettings GetBuildSettings()
         {
-            var buildSettings = NavMesh.GetSettingsByID(m_AgentTypeID);
+            var buildSettings = NavMeshExtensions.GetSettingsByID(m_AgentTypeID);
             if (buildSettings.agentTypeID == -1)
             {
                 Debug.LogWarning("No build settings for agent type ID " + agentTypeID, this);
@@ -144,7 +147,7 @@ namespace UnityEngine.AI
                 sourcesBounds = CalculateWorldBounds(sources);
             }
 
-            var data = NavMeshBuilder.BuildNavMeshData(GetBuildSettings(),
+            var data = NavMeshBuilderExtensions.BuildNavMeshData(GetBuildSettings(),
                     sources, sourcesBounds, transform.position, transform.rotation);
 
             if (data != null)
@@ -167,7 +170,7 @@ namespace UnityEngine.AI
             if (m_CollectObjects == CollectObjects.All || m_CollectObjects == CollectObjects.Children)
                 sourcesBounds = CalculateWorldBounds(sources);
 
-            return NavMeshBuilder.UpdateNavMeshDataAsync(data, GetBuildSettings(), sources, sourcesBounds);
+            return NavMeshBuilderExtensions.UpdateNavMeshDataAsync(data, GetBuildSettings(), sources, sourcesBounds);
         }
 
         static void Register(NavMeshSurface surface)
@@ -183,7 +186,7 @@ namespace UnityEngine.AI
             }
 #endif
             if (s_NavMeshSurfaces.Count == 0)
-                NavMesh.onPreUpdate += UpdateActive;
+                NavMesh.onPreUpdate += (Action)UpdateActive;
 
             if (!s_NavMeshSurfaces.Contains(surface))
                 s_NavMeshSurfaces.Add(surface);
@@ -194,7 +197,9 @@ namespace UnityEngine.AI
             s_NavMeshSurfaces.Remove(surface);
 
             if (s_NavMeshSurfaces.Count == 0)
-                NavMesh.onPreUpdate -= UpdateActive;
+            {
+                NavMesh.onPreUpdate -= (Action)UpdateActive;
+            }
         }
 
         static void UpdateActive()
@@ -302,17 +307,17 @@ namespace UnityEngine.AI
             {
                 if (m_CollectObjects == CollectObjects.All)
                 {
-                    NavMeshBuilder.CollectSources(null, m_LayerMask, m_UseGeometry, m_DefaultArea, markups, sources);
+                    NavMeshBuilderExtensions.CollectSources(null, m_LayerMask, m_UseGeometry, m_DefaultArea, markups, sources);
                 }
                 else if (m_CollectObjects == CollectObjects.Children)
                 {
-                    NavMeshBuilder.CollectSources(transform, m_LayerMask, m_UseGeometry, m_DefaultArea, markups, sources);
+                    NavMeshBuilderExtensions.CollectSources(transform, m_LayerMask, m_UseGeometry, m_DefaultArea, markups, sources);
                 }
                 else if (m_CollectObjects == CollectObjects.Volume)
                 {
                     Matrix4x4 localToWorld = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
                     var worldBounds = GetWorldBounds(localToWorld, new Bounds(m_Center, m_Size));
-                    NavMeshBuilder.CollectSources(worldBounds, m_LayerMask, m_UseGeometry, m_DefaultArea, markups, sources);
+                    NavMeshBuilderExtensions.CollectSources(worldBounds, m_LayerMask, m_UseGeometry, m_DefaultArea, markups, sources);
                 }
             }
 

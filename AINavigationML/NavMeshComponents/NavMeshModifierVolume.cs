@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using MelonLoader;
 
 namespace UnityEngine.AI
 {
+    [RegisterTypeInIl2Cpp]
     public class NavMeshModifierVolume : MonoBehaviour
     {
         Vector3 m_Size = new Vector3(4.0f, 3.0f, 4.0f);

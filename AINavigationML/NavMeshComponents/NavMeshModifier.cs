@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using MelonLoader;
 
 namespace UnityEngine.AI
 {
+    [RegisterTypeInIl2Cpp]
     public class NavMeshModifier : MonoBehaviour
     {
         bool m_OverrideArea;
