@@ -403,3 +403,5 @@ FodyWeavers.xsd
 ref/**/*
 !ref/README.*
 game_dir.txt
+
+**/dist/manifest.json
