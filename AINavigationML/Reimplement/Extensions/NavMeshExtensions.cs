@@ -1,4 +1,4 @@
-﻿using UniverseLib.Runtime.Il2Cpp;
+﻿using AINavigationML;
 
 namespace UnityEngine.AI.Extensions;
 

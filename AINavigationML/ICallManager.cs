@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Il2CppInterop.Runtime;
 
-namespace UniverseLib.Runtime.Il2Cpp
+namespace AINavigationML
 {
     /// <summary>
     /// Helper class for using Unity ICalls (internal calls).

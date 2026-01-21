@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using Il2CppInterop.Runtime;
 using UnityEngine.Bindings;
-using UniverseLib.Runtime.Il2Cpp;
+using AINavigationML;
 
 namespace UnityEngine.AI
 {
