@@ -405,3 +405,4 @@ ref/**/*
 game_dir.txt
 
 **/dist/manifest.json
+**/ref/

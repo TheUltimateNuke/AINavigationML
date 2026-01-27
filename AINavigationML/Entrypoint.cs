@@ -1,7 +1,13 @@
 ﻿using AINavigationML;
+using DotRecast.Core;
+using DotRecast.Detour.Crowd;
+using DotRecast.Recast;
+using DotRecast.Recast.Toolset.Builder;
 using MelonLoader;
+using UniRecast.Core;
 using UnityEngine;
-using UnityEngine.AI;
+using UnityEngine.SceneManagement;
+using NetworkManager = UnityEngine.Networking.NetworkManager;
 
 [assembly: MelonInfo(typeof(Entrypoint), MyModInfo.Name, MyModInfo.Version, MyModInfo.Author)]
 [assembly: MelonGame("Boneloaf", "Gang Beasts")]
@@ -10,30 +16,47 @@ namespace AINavigationML;
 
 public class Entrypoint : MelonMod
 {
+    internal static MelonLogger.Instance Logger => Melon<Entrypoint>.Logger;
+    
     private const float NavMeshRefreshRateSeconds = 10f;
+
+    internal static bool isDebugMode => MelonDebug.IsEnabled();
     
     private static float _navMeshRefreshRateSeconds = NavMeshRefreshRateSeconds;
-    private static event Action? OnNavMeshRefresh;
-    
-    public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+
+    public static UniRcNavMeshSurface? navMeshSurface { get; private set; }
+    public static DtCrowd? dtCrowdManager { get; internal set; }
+
+    public override void OnInitializeMelon()
     {
-        var navMeshObj = new GameObject("AINavigationML_DynamicNavMesh");
-        var surface = navMeshObj.AddComponent<NavMeshSurface>();
-        surface.size = Vector3.one * 100f;
-        surface.BuildNavMesh();
-        OnNavMeshRefresh += surface.BuildNavMesh;
+        base.OnInitializeMelon();
+        NetworkManager.add_OnNetworkSceneLoaded(new Action(OnSceneWasLoaded));
     }
 
-    public override void OnFixedUpdate()
+    private void OnSceneWasLoaded()
     {
-        if (_navMeshRefreshRateSeconds <= 0)
-        {
-            OnNavMeshRefresh?.Invoke();
-            _navMeshRefreshRateSeconds = NavMeshRefreshRateSeconds;
+        if (SceneManager.GetActiveScene().name == "_bootScene") return;
 
-            return;
-        }
+        var navMeshObj = new GameObject("AINavigationML_DynamicNavMesh")
+        {
+            hideFlags = HideFlags.DontUnloadUnusedAsset
+        };
+        navMeshSurface = navMeshObj.AddComponent<UniRcNavMeshSurface>();
+        navMeshSurface.Bake();
         
-        _navMeshRefreshRateSeconds -= Time.fixedDeltaTime;
+        dtCrowdManager ??= new DtCrowd(new DtCrowdConfig(0.1f), navMeshSurface.GetNavMeshData());
+        dtCrowdManager.SetObstacleAvoidanceParams(0, new DtObstacleAvoidanceParams
+        {
+            velBias = 0.5f,
+            adaptiveDepth = 1,
+            adaptiveDivs = 5,
+            adaptiveRings = 2
+        });
+    }
+
+    public override void OnUpdate()
+    {
+        if (navMeshSurface == null) return;
+        dtCrowdManager?.Update(Time.deltaTime, new DtCrowdAgentDebugInfo());
     }
 }
