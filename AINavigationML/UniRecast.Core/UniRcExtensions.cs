@@ -4,8 +4,10 @@ using System.Text;
 using DotRecast.Core;
 using DotRecast.Core.Numerics;
 using DotRecast.Detour;
+using DotRecast.Detour.Dynamic.Colliders;
 using DotRecast.Detour.Io;
 using DotRecast.Recast;
+using DotRecast.Recast.Toolset.Builder;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -15,6 +17,25 @@ namespace UniRecast.Core
     // https://github.com/highfidelity/unity-to-hifi-exporter/blob/master/Assets/UnityToHiFiExporter/Editor/TerrainObjExporter.cs
     public static class UniRcExtensions
     {
+        public static DtBoxCollider ToDtCollider(this BoxCollider boxCollider)
+        {
+            var ret = new DtBoxCollider(boxCollider.transform.TransformPoint(boxCollider.center).ToRightHand(),
+                DtBoxCollider.GetHalfEdges(boxCollider.transform.up.ToRightHand(),
+                    boxCollider.transform.forward.ToRightHand(), boxCollider.extents.ToRightHand()),
+                SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GROUND, 0.9f);
+            return ret;
+        }
+        
+        public static DtCapsuleCollider ToDtCollider(this CapsuleCollider capsuleCollider)
+        {
+            var capsuleOffset = capsuleCollider.height / 2f - capsuleCollider.radius;
+            var start = capsuleCollider.center - (capsuleCollider.transform.up * capsuleOffset);
+            var end = capsuleCollider.center + (capsuleCollider.transform.up * capsuleOffset);
+            var ret = new DtCapsuleCollider(start.ToRightHand(), end.ToRightHand(), capsuleCollider.radius,
+                SampleAreaModifications.SAMPLE_POLYAREA_TYPE_GROUND, 0.9f);
+            return ret;
+        }
+        
         public static RcVec3f ToRightHand(this Vector3 v)
         {
             return new RcVec3f(-v.x, v.y, v.z);
@@ -22,12 +43,52 @@ namespace UniRecast.Core
 
         public static UniRcNavMeshSurfaceTarget ToUniRcSurfaceSource(this MeshFilter meshFilter)
         {
-            return new UniRcNavMeshSurfaceTarget(meshFilter.name, meshFilter.sharedMesh, meshFilter.transform.localToWorldMatrix);
+            return new UniRcNavMeshSurfaceTarget(meshFilter.name, meshFilter.sharedMesh.GetTopMesh(meshFilter.transform), meshFilter.transform.localToWorldMatrix);
         }
         
         public static UniRcNavMeshSurfaceTarget ToUniRcSurfaceSource(this BoxCollider boxCollider)
         {
-            return new UniRcNavMeshSurfaceTarget(boxCollider.name, GenerateMeshFromBoxCollider(boxCollider), boxCollider.transform.localToWorldMatrix);
+            return new UniRcNavMeshSurfaceTarget(boxCollider.name, GenerateMeshFromBoxCollider(boxCollider).GetTopMesh(boxCollider.transform), boxCollider.transform.localToWorldMatrix);
+        }
+
+        public static Mesh GetTopMesh(this Mesh mesh, Transform transform)
+        {
+            var triangles = mesh.triangles;
+            var vertices = mesh.vertices;
+            var topSurfaceVertices = new List<Vector3>();
+            var topSurfaceTriangles = new List<int>();
+            
+            for (var i = 0; i < triangles.Length; i += 3)
+            {
+                var v1 = transform.TransformPoint(vertices[triangles[i]]);
+                var v2 = transform.TransformPoint(vertices[triangles[i + 1]]);
+                var v3 = transform.TransformPoint(vertices[triangles[i + 2]]);
+
+                // Calculate normal of the triangle
+                var normal = Vector3.Cross(v2 - v1, v3 - v1).normalized;
+                // Check if the normal points generally upward
+                if (normal.y > 0.45f) // Adjust 0.7f as needed
+                {
+                    var indexOffset = topSurfaceVertices.Count;
+                    topSurfaceVertices.Add(vertices[triangles[i]]);
+                    topSurfaceVertices.Add(vertices[triangles[i + 1]]);
+                    topSurfaceVertices.Add(vertices[triangles[i + 2]]);
+                    topSurfaceTriangles.Add(indexOffset);
+                    topSurfaceTriangles.Add(indexOffset + 1);
+                    topSurfaceTriangles.Add(indexOffset + 2);
+                }
+            }
+
+            var ret = new Mesh
+            {
+                vertices = topSurfaceVertices.ToArray(),
+                triangles = topSurfaceTriangles.ToArray()
+            };
+            ret.RecalculateNormals();
+            ret.RecalculateBounds();
+            ret.Optimize();
+
+            return ret;
         }
 
         private static Mesh GenerateMeshFromBoxCollider(BoxCollider collider)
@@ -90,7 +151,7 @@ namespace UniRecast.Core
                 triangles = triangles
             };
             mesh.Optimize();
-            mesh.RecalculateNormals(); // Required for correct lighting/shading
+            mesh.RecalculateNormals();
             
             return mesh;
         }
@@ -196,11 +257,11 @@ namespace UniRecast.Core
         
         public static DtNavMesh LoadNavMeshFile(string fileName)
         {
-            using var fs = new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite);
+            using var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
             using var br = new BinaryReader(fs);
 
             var reader = new DtMeshSetReader();
-            return reader.Read(br, 3);
+            return reader.Read(br, 6);
         }
     }
 }

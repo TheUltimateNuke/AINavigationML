@@ -4,6 +4,8 @@ using AINavigationML;
 using DotRecast.Core;
 using DotRecast.Core.Numerics;
 using DotRecast.Detour;
+using DotRecast.Detour.Dynamic;
+using DotRecast.Detour.Dynamic.Io;
 using DotRecast.Detour.Extras.Jumplink;
 using DotRecast.Recast;
 using DotRecast.Recast.Geom;
@@ -65,12 +67,12 @@ namespace UniRecast.Core
             return sb.ToString();
         }
 
-        public DtNavMesh Build(RcNavMeshBuildSettings setting)
+        public DtDynamicNavMesh Build(RcNavMeshBuildSettings setting)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             var vertices = new float[Vertices.Length * 3];
-            for (int i = 0; i < Vertices.Length; ++i)
+            for (var i = 0; i < Vertices.Length; ++i)
             {
                 vertices[i * 3 + 0] = Vertices[i].X;
                 vertices[i * 3 + 1] = Vertices[i].Y;
@@ -78,11 +80,26 @@ namespace UniRecast.Core
             }
 
             var geom = new DemoInputGeomProvider(vertices, Faces);
-            var meshBuilder = new TileNavMeshBuilder();
+            var meshBuilder = new SoloNavMeshBuilder();
             var result = meshBuilder.Build(geom, setting);
+            var dynMesh = DynFromStat(setting, result.RecastBuilderResults);
             stopwatch.Stop();
             Entrypoint.Logger.Msg($"Navmesh build took {stopwatch.ElapsedMilliseconds}ms");
-            return result.NavMesh;
+            return dynMesh;
+        }
+
+        public static DtDynamicNavMesh DynFromStat(RcNavMeshBuildSettings setting, IList<RcBuilderResult> result)
+        {
+            var cfg = new RcConfig(setting.tiled, setting.tileSize, setting.tileSize, 1, RcPartition.MONOTONE,
+                setting.cellSize, setting.cellHeight, setting.agentMaxSlope, setting.agentHeight, setting.agentRadius,
+                setting.agentMaxClimb, setting.minRegionSize, setting.mergedRegionSize, setting.edgeMaxLen,
+                setting.edgeMaxError, setting.vertsPerPoly, setting.detailSampleDist, setting.detailSampleMaxError,
+                setting.filterLowHangingObstacles, setting.filterLedgeSpans, setting.filterWalkableLowHeightSpans,
+                SampleAreaModifications.SAMPLE_AREAMOD_GROUND, true);
+            var resultData = DtVoxelFile.From(cfg, result);
+            var dynMesh = new DtDynamicNavMesh(resultData);
+            dynMesh.Build();
+            return dynMesh;
         }
 
         public void SaveFile(string path = "")

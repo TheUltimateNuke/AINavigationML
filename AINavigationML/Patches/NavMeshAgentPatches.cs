@@ -7,6 +7,7 @@ using Il2CppFemur;
 using UniRecast.Core;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UIElements;
 
 namespace AINavigationML.Patches;
 
@@ -54,11 +55,20 @@ public static class ControlHandeler_UpdateAgentDirection_Patch
             }
         }
         
+        __instance.rawDirection = Vector3.zero;
+        if (__instance.actor.bodyHandeler.agent.remainingDistance > 0.2f)
+        {
+            var dir = (__instance.actor.bodyHandeler.Agent.PartTransform.position - __instance.actor.bodyHandeler.Ball.PartTransform.position) * 100f;
+            dir = Vector3.Lerp(vector, __instance.direction, 0.2f);
+            __instance.direction = Vector3.Normalize(new Vector3(dir.x, 0f, dir.z));
+            __instance.rawDirection = __instance.direction;
+        }
+        __instance.lookDirection = __instance.direction + new Vector3(0f, 0.2f, 0f);
+        if (__instance.actor.targetingHandeler.upperIntrest != null)
+            __instance.lookDirection = __instance.actor.targetingHandeler.upperIntrest.ClosestPoint(__instance.actor.bodyHandeler.Head.PartCollider.bounds.center) - __instance.actor.bodyHandeler.Head.PartCollider.bounds.center;
+        
         var success = dtAgent.SetMoveTarget(vector.ToRightHand(), false);
-
-        __instance.direction =
-            -new Vector3(dtAgent.CrowdAgent.npos.X, dtAgent.CrowdAgent.npos.Y, dtAgent.CrowdAgent.npos.Z).normalized;
-        Entrypoint.Logger.Msg($"(Agent id: {dtAgent.CrowdAgent.idx}) " + "State: " + dtAgent.CrowdAgent.state);
+        Entrypoint.Logger.Msg($"(Agent id: {dtAgent.CrowdAgent.idx}) " + "State: " + dtAgent.CrowdAgent.state + $" TARGET REF: {dtAgent.CrowdAgent.targetRef}");
         //Entrypoint.Logger.Msg($"(Agent id: {dtAgent.CrowdAgent.idx}) " + "SetMoveTarget result: " + success);
         return false;
     }
@@ -75,5 +85,19 @@ internal static class Actor_Awake_Patch
         if (agentObj == null) return;
         var agent = agentObj.AddComponent<UnityDtCrowdAgent>();
         agent.actorOwner = __instance;
+    }
+}
+
+[HarmonyPatch(typeof(GameObject), nameof(GameObject.SetActive))]
+internal static class GameObject_SetActive_Patch
+{
+    private static void Postfix(GameObject __instance)
+    {
+        var bc = __instance.GetComponentsInChildren<BoxCollider>();
+        var capC = __instance.GetComponentsInChildren<CapsuleCollider>();
+        foreach (var c in capC)
+        {
+            capC.
+        }
     }
 }

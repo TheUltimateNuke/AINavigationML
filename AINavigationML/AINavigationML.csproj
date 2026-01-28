@@ -103,6 +103,8 @@
         <Copy Condition="'$(Configuration)' == 'Release'" SourceFiles="$(TargetDir)/DotRecast.Detour.dll" DestinationFolder="dist\UserLibs"/>
         <Copy Condition="'$(GameDir)' != ''" SourceFiles="$(TargetDir)/DotRecast.Detour.Crowd.dll" DestinationFolder="$(GameDir)\UserLibs"/>
         <Copy Condition="'$(Configuration)' == 'Release'" SourceFiles="$(TargetDir)/DotRecast.Detour.Crowd.dll" DestinationFolder="dist\UserLibs"/>
+        <Copy Condition="'$(GameDir)' != ''" SourceFiles="$(TargetDir)/DotRecast.Detour.Dynamic.dll" DestinationFolder="$(GameDir)\UserLibs"/>
+        <Copy Condition="'$(Configuration)' == 'Release'" SourceFiles="$(TargetDir)/DotRecast.Detour.Dynamic.dll" DestinationFolder="dist\UserLibs"/>
         <Copy Condition="'$(GameDir)' != ''" SourceFiles="$(TargetDir)/DotRecast.Detour.Extras.dll" DestinationFolder="$(GameDir)\UserLibs"/>
         <Copy Condition="'$(Configuration)' == 'Release'" SourceFiles="$(TargetDir)/DotRecast.Detour.Extras.dll" DestinationFolder="dist\UserLibs"/>
     </Target>
